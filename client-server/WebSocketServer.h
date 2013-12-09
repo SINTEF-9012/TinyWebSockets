@@ -16,7 +16,7 @@ class WebSocketServer : WebSocket {
 
 	public:
 		WebSocketServer(int _port);
-		WebSocketServer(int _port, ThingMLCallback* _onopen, ThingMLCallback* _onclose, ThingMLCallback* _onerror, ThingMLCallback* _onmessage);
+		WebSocketServer(int _port, ThingMLCallback* _onopen, ThingMLCallback* _onclose, ThingMLCallback* _onmessage, ThingMLCallback* _onerror);
 		virtual ~WebSocketServer();
 		void Destroy();
 

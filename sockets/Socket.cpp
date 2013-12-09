@@ -23,11 +23,11 @@ Socket::Socket(int _port){
 Socket::Socket(int _port,
 		ThingMLCallback* _onopen,
 		ThingMLCallback* _onclose,
-		ThingMLCallback* _onerror,
-		ThingMLCallback* _onmessage){
+		ThingMLCallback* _onmessage,
+		ThingMLCallback* _onerror){
 	this->port = _port;
-	this->onclose = _onopen;
-	this->onerror = _onclose;
-	this->onmessage = _onerror;
-	this->onopen = _onmessage;
+	this->onclose = _onclose;
+	this->onerror = _onerror;
+	this->onmessage = _onmessage;
+	this->onopen = _onopen;
 }

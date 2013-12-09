@@ -12,9 +12,9 @@
 
 using namespace WebSockets;
 
-WebSocketObserver::WebSocketObserver(ThingMLCallback* _msg_callback,
-		ThingMLCallback* _open_callback,
+WebSocketObserver::WebSocketObserver(ThingMLCallback* _open_callback,
 		ThingMLCallback* _close_callback,
+		ThingMLCallback* _msg_callback,
 		ThingMLCallback* _error_callback)
 {
 	this->msg_callback = _msg_callback;

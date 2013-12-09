@@ -3,7 +3,7 @@ OBJS = run.o ./sockets/Socket.o ./sockets/WebSocket.o ./libs/Log.o ./libs/Utilit
 
 GNUTLS := #-lgnutls
 LIBS = $(GNUTLS) -lpthread -lwebsockets
-CFLAGS = -DDEBUG -Wall
+CFLAGS = -DDEBUG -Wall -fpermissive
 
 GPP = g++
 

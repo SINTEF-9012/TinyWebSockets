@@ -18,8 +18,8 @@ WebSocketServer::WebSocketServer(int _port) : WebSocket(_port){
 WebSocketServer::WebSocketServer(int _port,
 		ThingMLCallback* _onopen,
 		ThingMLCallback* _onclose,
-		ThingMLCallback* _onerror,
-		ThingMLCallback* _onmessage) : WebSocket(_port, _onopen, _onclose, _onerror, _onmessage){
+		ThingMLCallback* _onmessage,
+		ThingMLCallback* _onerror) : WebSocket(_port, _onopen, _onclose, _onmessage, _onerror){
 
 }
 
