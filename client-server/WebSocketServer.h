@@ -33,7 +33,6 @@ class WebSocketServer : WebSocket {
 		static WebSocketServer* s_instance;
 		static int ringbuffer_head;
 		static struct a_message ringbuffer[MAX_MESSAGE_QUEUE];
-		static int close_testing;
 		static int force_exit;
 
 		WebSocketServer(int _port);

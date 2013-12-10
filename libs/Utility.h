@@ -9,6 +9,7 @@
 #define UTILITY_H_
 
 #include "Log.h"
+#include "../libwebsockets/libwebsockets.h"
 
 namespace WebSockets {
 
@@ -53,5 +54,12 @@ namespace WebSockets {
 	};
 
 }
+
+extern "C" {
+	LWS_VISIBLE int lws_hdr_total_length(struct libwebsocket *wsi, enum lws_token_indexes h);
+	LWS_VISIBLE int lws_hdr_copy(struct libwebsocket *wsi, char *dest, int len, enum lws_token_indexes h);
+}
+
+void dump_handshake_info(struct libwebsocket *wsi);
 
 #endif /* UTILITY_H_ */

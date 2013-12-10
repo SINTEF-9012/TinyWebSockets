@@ -21,7 +21,6 @@ using namespace WebSockets;
 
 WebSocketServer* WebSocketServer::s_instance = NULL;
 int WebSocketServer::ringbuffer_head = 0;
-int WebSocketServer::close_testing = -1;
 struct a_message WebSocketServer::ringbuffer[MAX_MESSAGE_QUEUE];
 int WebSocketServer::force_exit = 0;
 
@@ -198,11 +197,10 @@ int WebSocketServer::callback_web_socket_server(struct libwebsocket_context *con
 		struct libwebsocket *wsi,
 		enum libwebsocket_callback_reasons reason,
 				       void *user, void *in, size_t len){
-
-	WebSocketServer* wss = WebSocketServer::Get();
-
 	int n;
-	struct per_session_data__lws_mirror *pss = (struct per_session_data__lws_mirror *)user;
+	char *error_message = "";
+	WebSocketServer* wss = WebSocketServer::Get();
+	struct per_session_data__lws_mirror *pss = (struct per_session_data__lws_mirror *) user;
 
 	switch (reason) {
 
@@ -210,9 +208,7 @@ int WebSocketServer::callback_web_socket_server(struct libwebsocket_context *con
 			lwsl_info("callback_lws_mirror: LWS_CALLBACK_ESTABLISHED\n");
 			pss->ringbuffer_tail = ringbuffer_head;
 			pss->wsi = wsi;
-
 			wss->onOpen();
-
 			break;
 
 		case LWS_CALLBACK_PROTOCOL_DESTROY:
@@ -220,11 +216,10 @@ int WebSocketServer::callback_web_socket_server(struct libwebsocket_context *con
 			for (n = 0; n < (int)(sizeof ringbuffer / sizeof ringbuffer[0]); n++)
 				if (ringbuffer[n].payload)
 					free(ringbuffer[n].payload);
+			wss->onClose();
 			break;
 
 		case LWS_CALLBACK_SERVER_WRITEABLE:
-			if (close_testing)
-				break;
 			while (pss->ringbuffer_tail != ringbuffer_head) {
 
 				n = libwebsocket_write(wsi, (unsigned char *)
@@ -233,12 +228,17 @@ int WebSocketServer::callback_web_socket_server(struct libwebsocket_context *con
 					   ringbuffer[pss->ringbuffer_tail].len,
 									LWS_WRITE_TEXT);
 				if (n < (int) ringbuffer[pss->ringbuffer_tail].len) {
-					lwsl_err("ERROR %d writing to mirror socket\n", n);
+					sprintf(error_message, "ERROR %d writing to mirror socket\n", n);
+					lwsl_err(error_message);
+					wss->onError(error_message);
 					return -1;
 				}
-				if (n < (int) ringbuffer[pss->ringbuffer_tail].len)
-					lwsl_err("mirror partial write %d vs %d\n",
-						   n, ringbuffer[pss->ringbuffer_tail].len);
+				if (n < (int) ringbuffer[pss->ringbuffer_tail].len){
+					sprintf(error_message, "mirror partial write %d vs %d\n",
+							n, ringbuffer[pss->ringbuffer_tail].len);
+					lwsl_err(error_message);
+					wss->onError(error_message);
+				}
 
 				if (pss->ringbuffer_tail == (MAX_MESSAGE_QUEUE - 1))
 					pss->ringbuffer_tail = 0;
@@ -250,17 +250,10 @@ int WebSocketServer::callback_web_socket_server(struct libwebsocket_context *con
 					libwebsocket_rx_flow_allow_all_protocol(
 							   libwebsockets_get_protocol(wsi));
 
-				// lwsl_debug("tx fifo %d\n", (ringbuffer_head - pss->ringbuffer_tail) & (MAX_MESSAGE_QUEUE - 1));
-
 				if (lws_send_pipe_choked(wsi)) {
 					libwebsocket_callback_on_writable(context, wsi);
 					break;
 				}
-				/*
-				 * for tests with chrome on same machine as client and
-				 * server, this is needed to stop chrome choking
-				 */
-				//usleep(1);
 			}
 			break;
 
@@ -268,7 +261,9 @@ int WebSocketServer::callback_web_socket_server(struct libwebsocket_context *con
 
 			if (((ringbuffer_head - pss->ringbuffer_tail) &
 					  (MAX_MESSAGE_QUEUE - 1)) == (MAX_MESSAGE_QUEUE - 1)) {
-				lwsl_err("dropping!\n");
+				error_message = "dropping!\n";
+				lwsl_err(error_message);
+				wss->onError(error_message);
 				goto choke;
 			}
 
@@ -294,10 +289,10 @@ choke:
 			lwsl_debug("LWS_CALLBACK_RECEIVE: throttling %p\n", wsi);
 			libwebsocket_rx_flow_control(wsi, 0);
 
-	//		lwsl_debug("rx fifo %d\n", (ringbuffer_head - pss->ringbuffer_tail) & (MAX_MESSAGE_QUEUE - 1));
 done:
 			libwebsocket_callback_on_writable_all_protocol(
 							   libwebsockets_get_protocol(wsi));
+			wss->onMessage((char*) in);
 			break;
 
 		/*
@@ -307,6 +302,7 @@ done:
 		 */
 
 		case LWS_CALLBACK_FILTER_PROTOCOL_CONNECTION:
+			dump_handshake_info(wsi);
 			/* you could return non-zero here and kill the connection */
 			break;
 
