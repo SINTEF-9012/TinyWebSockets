@@ -10,6 +10,7 @@
 
 #include "Socket.h"
 #include "../libs/Utility.h"
+#include "../libwebsockets/libwebsockets.h"
 
 class WebSocket : Socket {
 
@@ -20,6 +21,9 @@ class WebSocket : Socket {
 		WebSocket(int _port);
 		WebSocket(int _port, ThingMLCallback* _onopen, ThingMLCallback* _onclose, ThingMLCallback* _onerror, ThingMLCallback* _onmessage);
 		virtual ~WebSocket();
+		virtual int getPort();
+
+		virtual void setObserver(ThingMLCallback* _onopen, ThingMLCallback* _onclose, ThingMLCallback* _onerror, ThingMLCallback* _onmessage);
 };
 
 

@@ -12,6 +12,7 @@
 
 using namespace WebSockets;
 
+
 WebSocketObserver::WebSocketObserver(ThingMLCallback* _open_callback,
 		ThingMLCallback* _close_callback,
 		ThingMLCallback* _msg_callback,
@@ -68,7 +69,7 @@ void WebSocketObserver::onClose(){
 }
 
 WebSocketObserver::~WebSocketObserver(){
-	Log::Write(LogLevel_Info, "WebSocketObserver::~WebSocketObserver is called");
+	Log::Write(LogLevel_Info, "WebSocketObserver::~WebSocketObserver is called 0x%08x", this);
 	if(this->msg_callback != NULL){
 		delete this->msg_callback;
 	}

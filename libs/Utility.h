@@ -8,6 +8,8 @@
 #ifndef UTILITY_H_
 #define UTILITY_H_
 
+#include "Log.h"
+
 namespace WebSockets {
 
 	//TODO: using of this structure requires the -fpermissive flag while compiling since it is not type safe
@@ -21,6 +23,9 @@ namespace WebSockets {
 			fn_callback(_callback),
 			instance(_instance){
 		};
+		~ThingMLCallback(){
+			Log::Write(LogLevel_Debug, "~ThingMLCallback() is called 0x%08x", this);
+		}
 	};
 
 	class WebSocketObserver {

@@ -25,11 +25,12 @@ class Socket {
 		Socket(int _port);
 		Socket(int _port, ThingMLCallback* _onopen, ThingMLCallback* _onclose, ThingMLCallback* _onmessage, ThingMLCallback* _onerror);
 		virtual ~Socket() {};
+		virtual int getPort(){return this->port;};
 
 	public:
-		virtual void open() = 0;
-		virtual void close() = 0;
-		virtual void sendMessage(char* message) = 0;
+		virtual int open() = 0;
+		virtual int close() = 0;
+		virtual int sendMessage(char* message) = 0;
 
 	protected:
 		virtual void onOpen() = 0;
