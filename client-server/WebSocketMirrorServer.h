@@ -27,24 +27,26 @@ struct a_message {
 };
 
 
-class WebSocketServer : WebSocket {
+class WebSocketMirrorServer : WebSocket {
 
 	public:
-		static WebSocketServer* s_instance;
-		static int ringbuffer_head;
-		static struct a_message ringbuffer[MAX_MESSAGE_QUEUE];
-		static int force_exit;
+		static WebSocketMirrorServer* s_instance;
+		static const char *web_socket_subprotocol;
+		struct libwebsocket_context *context;
 
-		WebSocketServer(int _port);
-		WebSocketServer(int _port, ThingMLCallback* _onopen, ThingMLCallback* _onclose, ThingMLCallback* _onmessage, ThingMLCallback* _onerror);
+		int force_exit;
+		int ringbuffer_head;
+		struct a_message ringbuffer[MAX_MESSAGE_QUEUE];
+
+		WebSocketMirrorServer(int _port);
 		virtual int getPort();
 
-		static WebSocketServer* Init(int _port);
-		static WebSocketServer* Init(int _port, ThingMLCallback* _onopen, ThingMLCallback* _onclose, ThingMLCallback* _onmessage, ThingMLCallback* _onerror);
-		static WebSocketServer* Get();
-		static WebSocketServer* SetCallback(ThingMLCallback* _onopen, ThingMLCallback* _onclose, ThingMLCallback* _onmessage, ThingMLCallback* _onerror);
+		static WebSocketMirrorServer* Init(int _port);
+		static WebSocketMirrorServer* Init(int _port, ThingMLCallback* _onopen, ThingMLCallback* _onclose, ThingMLCallback* _onmessage, ThingMLCallback* _onerror);
+		static WebSocketMirrorServer* Get();
+		static WebSocketMirrorServer* SetCallback(ThingMLCallback* _onopen, ThingMLCallback* _onclose, ThingMLCallback* _onmessage, ThingMLCallback* _onerror);
 
-		virtual ~WebSocketServer();
+		virtual ~WebSocketMirrorServer();
 		static void Destroy();
 
 	public:
@@ -55,12 +57,16 @@ class WebSocketServer : WebSocket {
 					struct libwebsocket *wsi,
 					enum libwebsocket_callback_reasons reason,
 							       void *user, void *in, size_t len);
+	private:
+		void reset();
 
 	protected:
 		virtual void onOpen();
 		virtual void onClose();
 		virtual void onError(char*error);
 		virtual void onMessage(char* message);
+
+		static void* startServicing(void *ptr);
 
 };
 

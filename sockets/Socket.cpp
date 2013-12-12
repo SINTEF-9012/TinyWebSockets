@@ -19,15 +19,3 @@ Socket::Socket(int _port){
 	this->onmessage = NULL;
 	this->onopen = NULL;
 }
-
-Socket::Socket(int _port,
-		ThingMLCallback* _onopen,
-		ThingMLCallback* _onclose,
-		ThingMLCallback* _onmessage,
-		ThingMLCallback* _onerror){
-	this->port = _port;
-	this->onclose = _onclose;
-	this->onerror = _onerror;
-	this->onmessage = _onmessage;
-	this->onopen = _onopen;
-}

@@ -1,5 +1,5 @@
 /*
- * WebSocketServer.cpp
+ * WebSocketMirrorServer.cpp
  *
  *  Created on: Dec 7, 2013
  *      Author: vassik
@@ -10,8 +10,9 @@
 #include <unistd.h>
 #include <string.h>
 #include <syslog.h>
+#include <pthread.h>
 
-#include "WebSocketServer.h"
+#include "WebSocketMirrorServer.h"
 #include "../libs/Log.h"
 #include "../libwebsockets/libwebsockets.h"
 #include "../libs/Constants.h"
@@ -19,34 +20,33 @@
 using namespace WebSockets;
 
 
-WebSocketServer* WebSocketServer::s_instance = NULL;
-int WebSocketServer::ringbuffer_head = 0;
-struct a_message WebSocketServer::ringbuffer[MAX_MESSAGE_QUEUE];
-int WebSocketServer::force_exit = 0;
+WebSocketMirrorServer* WebSocketMirrorServer::s_instance = NULL;
+const char *WebSocketMirrorServer::web_socket_subprotocol = LWS_MIRROR_PROTOCOL;
 
-WebSocketServer* WebSocketServer::Init(int _port,
+WebSocketMirrorServer* WebSocketMirrorServer::Init(int _port,
 		ThingMLCallback* _onopen,
 		ThingMLCallback* _onclose,
 		ThingMLCallback* _onmessage,
 		ThingMLCallback* _onerror) {
 	if(s_instance == NULL){
-		s_instance = new WebSocketServer(_port, _onopen, _onclose, _onmessage, _onerror);
+		s_instance = new WebSocketMirrorServer(_port);
+		s_instance->setObserver(_onopen, _onclose, _onmessage, _onerror);
 	}
 	return s_instance;
 }
 
-WebSocketServer* WebSocketServer::Init(int _port) {
+WebSocketMirrorServer* WebSocketMirrorServer::Init(int _port) {
 	if(s_instance == NULL){
-		s_instance = new WebSocketServer(_port);
+		s_instance = new WebSocketMirrorServer(_port);
 	}
 	return s_instance;
 }
 
-WebSocketServer* WebSocketServer::Get(){
+WebSocketMirrorServer* WebSocketMirrorServer::Get(){
 	return s_instance;
 }
 
-WebSocketServer* WebSocketServer::SetCallback(ThingMLCallback* _onopen,
+WebSocketMirrorServer* WebSocketMirrorServer::SetCallback(ThingMLCallback* _onopen,
 		ThingMLCallback* _onclose,
 		ThingMLCallback* _onmessage,
 		ThingMLCallback* _onerror){
@@ -56,40 +56,47 @@ WebSocketServer* WebSocketServer::SetCallback(ThingMLCallback* _onopen,
 	return s_instance;
 }
 
-void WebSocketServer::Destroy(){
-	WebSocketServer *wss = WebSocketServer::Get();
-	Log::Write(LogLevel_Debug, "WebSocketServer::Destroy() : destroying object 0x%08x", wss);
+void WebSocketMirrorServer::Destroy(){
+	WebSocketMirrorServer *wss = WebSocketMirrorServer::Get();
+	Log::Write(LogLevel_Debug, "WebSocketMirrorServer::Destroy() : destroying object 0x%08x", wss);
 	if(s_instance != NULL){
 		delete wss;
 		s_instance = NULL;
 	}
 }
 
-WebSocketServer::WebSocketServer(int _port) : WebSocket(_port){
-	s_instance = this;
+void WebSocketMirrorServer::reset(){
+	this->ringbuffer_head = 0;
+	this->context = NULL;
+	for (int n = 0; n < MAX_MESSAGE_QUEUE; n++){
+		this->ringbuffer[n].payload = NULL;
+		this->ringbuffer[n].len = 0;
+	}
 }
 
-WebSocketServer::WebSocketServer(int _port,
-		ThingMLCallback* _onopen,
-		ThingMLCallback* _onclose,
-		ThingMLCallback* _onmessage,
-		ThingMLCallback* _onerror) : WebSocket(_port, _onopen, _onclose, _onmessage, _onerror){
+WebSocketMirrorServer::WebSocketMirrorServer(int _port) : WebSocket(_port){
 	s_instance = this;
+	this->ringbuffer_head = 0;
+	this->context = NULL;
+	this->force_exit = 0;
+	for (int n = 0; n < MAX_MESSAGE_QUEUE; n++){
+		this->ringbuffer[n].payload = NULL;
+		this->ringbuffer[n].len = 0;
+	}
 }
 
-int WebSocketServer::getPort(){
+int WebSocketMirrorServer::getPort(){
 	return WebSocket::getPort();
 };
 
-WebSocketServer::~WebSocketServer(){
-	Log::Write(LogLevel_Debug, "WebSocketServer:::~WebSocketServer() : destroying object 0x%08x", this);
+WebSocketMirrorServer::~WebSocketMirrorServer(){
+	Log::Write(LogLevel_Debug, "WebSocketMirrorServer:::~WebSocketMirrorServer() : destroying object 0x%08x", this);
 }
 
-int WebSocketServer::open(){
-	const char *web_socket_protocol = LWS_MIRROR_PROTOCOL;
-	int n = 0;
-	struct libwebsocket_context *context;
-	int opts = 0;
+
+int WebSocketMirrorServer::open(){
+	pthread_t thread;
+	this->force_exit = 0;
 	const char *iface = NULL;
 #ifndef WIN32
 	int syslog_options = LOG_PID | LOG_PERROR;
@@ -98,9 +105,8 @@ int WebSocketServer::open(){
 	struct lws_context_creation_info info;
 
 	static struct libwebsocket_protocols protocols[] = {
-		/* first protocol must always be HTTP handler */
 		{
-			web_socket_protocol, /* name */
+			web_socket_subprotocol, /* name */
 			callback_web_socket_server, /* callback */
 			sizeof(struct per_session_data__lws_mirror), /* per_session_data_size */
 			128, /* max frame size / rx buffer */
@@ -133,7 +139,7 @@ int WebSocketServer::open(){
 
 	info.gid = -1;
 	info.uid = -1;
-	info.options = opts;
+	info.options = 0;
 
 	context = libwebsocket_create_context(&info);
 	if (context == NULL) {
@@ -141,8 +147,14 @@ int WebSocketServer::open(){
 		return -1;
 	}
 
-	n = 0;
-	while (n >= 0 && !force_exit) {
+	int iret1 = pthread_create( &thread, NULL, &startServicing, this);
+	return iret1;
+}
+
+void* WebSocketMirrorServer::startServicing(void* arg){
+	WebSocketMirrorServer* wss = (WebSocketMirrorServer*) arg;
+	int n = 0;
+	while (n >= 0 && !wss->force_exit) {
 		/*
 		 * If libwebsockets sockets are all we care about,
 		 * you can use this api which takes care of the poll()
@@ -152,90 +164,87 @@ int WebSocketServer::open(){
 		 * the number of ms in the second argument.
 		 */
 
-		n = libwebsocket_service(context, 50);
+		n = libwebsocket_service(wss->context, 50);
 
 	}
-
-	libwebsocket_context_destroy(context);
+	printf("stop servicing\n");
+	libwebsocket_context_destroy(wss->context);
 
 	lwsl_notice("libwebsockets-test-server exited cleanly\n");
 
 #ifndef WIN32
 	closelog();
 #endif
-
-	return 0;
+	return NULL;
 }
 
-int WebSocketServer::close(){
+int WebSocketMirrorServer::close(){
 	force_exit = 1;
 	return 0;
 }
 
-int WebSocketServer::sendMessage(char* message){
+int WebSocketMirrorServer::sendMessage(char* message){
 	return 0;
 }
 
-void WebSocketServer::onClose(){
+void WebSocketMirrorServer::onClose(){
 	this->observer->onClose();
 }
 
-void WebSocketServer::onError(char* error){
+void WebSocketMirrorServer::onError(char* error){
 	this->observer->onError(error);
 }
 
-void WebSocketServer::onMessage(char* message){
+void WebSocketMirrorServer::onMessage(char* message){
 	this->observer->onMessage(message);
 }
 
-void WebSocketServer::onOpen(){
+void WebSocketMirrorServer::onOpen(){
 	this->observer->onOpen();
 }
 
 
-int WebSocketServer::callback_web_socket_server(struct libwebsocket_context *context,
+int WebSocketMirrorServer::callback_web_socket_server(struct libwebsocket_context *context,
 		struct libwebsocket *wsi,
 		enum libwebsocket_callback_reasons reason,
 				       void *user, void *in, size_t len){
 	int n;
 	char *error_message = "";
-	WebSocketServer* wss = WebSocketServer::Get();
+	WebSocketMirrorServer* wss = WebSocketMirrorServer::Get();
 	struct per_session_data__lws_mirror *pss = (struct per_session_data__lws_mirror *) user;
 
 	switch (reason) {
 
 		case LWS_CALLBACK_ESTABLISHED:
 			lwsl_info("callback_lws_mirror: LWS_CALLBACK_ESTABLISHED\n");
-			pss->ringbuffer_tail = ringbuffer_head;
+			pss->ringbuffer_tail = wss->ringbuffer_head;
 			pss->wsi = wsi;
 			wss->onOpen();
 			break;
 
 		case LWS_CALLBACK_PROTOCOL_DESTROY:
 			lwsl_notice("mirror protocol cleaning up\n");
-			for (n = 0; n < (int)(sizeof ringbuffer / sizeof ringbuffer[0]); n++)
-				if (ringbuffer[n].payload)
-					free(ringbuffer[n].payload);
+			wss->reset();
 			wss->onClose();
 			break;
 
 		case LWS_CALLBACK_SERVER_WRITEABLE:
-			while (pss->ringbuffer_tail != ringbuffer_head) {
+			while (pss->ringbuffer_tail != wss->ringbuffer_head) {
 
 				n = libwebsocket_write(wsi, (unsigned char *)
-					   ringbuffer[pss->ringbuffer_tail].payload +
+						wss->ringbuffer[pss->ringbuffer_tail].payload +
 					   LWS_SEND_BUFFER_PRE_PADDING,
-					   ringbuffer[pss->ringbuffer_tail].len,
+					   wss->ringbuffer[pss->ringbuffer_tail].len,
 									LWS_WRITE_TEXT);
-				if (n < (int) ringbuffer[pss->ringbuffer_tail].len) {
+				if (n < (int) wss->ringbuffer[pss->ringbuffer_tail].len) {
 					sprintf(error_message, "ERROR %d writing to mirror socket\n", n);
 					lwsl_err(error_message);
 					wss->onError(error_message);
 					return -1;
 				}
-				if (n < (int) ringbuffer[pss->ringbuffer_tail].len){
+				if (n < (int) wss->ringbuffer[pss->ringbuffer_tail].len){
 					sprintf(error_message, "mirror partial write %d vs %d\n",
-							n, ringbuffer[pss->ringbuffer_tail].len);
+							n, wss->ringbuffer[pss->ringbuffer_tail].len);
 					lwsl_err(error_message);
 					wss->onError(error_message);
 				}
@@ -245,7 +254,7 @@ int WebSocketServer::callback_web_socket_server(struct libwebsocket_context *con
 				else
 					pss->ringbuffer_tail++;
 
-				if (((ringbuffer_head - pss->ringbuffer_tail) &
+				if (((wss->ringbuffer_head - pss->ringbuffer_tail) &
 					  (MAX_MESSAGE_QUEUE - 1)) == (MAX_MESSAGE_QUEUE - 15))
 					libwebsocket_rx_flow_allow_all_protocol(
 							   libwebsockets_get_protocol(wsi));
@@ -259,7 +268,7 @@ int WebSocketServer::callback_web_socket_server(struct libwebsocket_context *con
 
 		case LWS_CALLBACK_RECEIVE:
 
-			if (((ringbuffer_head - pss->ringbuffer_tail) &
+			if (((wss->ringbuffer_head - pss->ringbuffer_tail) &
 					  (MAX_MESSAGE_QUEUE - 1)) == (MAX_MESSAGE_QUEUE - 1)) {
 				error_message = "dropping!\n";
 				lwsl_err(error_message);
@@ -267,21 +276,21 @@ int WebSocketServer::callback_web_socket_server(struct libwebsocket_context *con
 				goto choke;
 			}
 
-			if (ringbuffer[ringbuffer_head].payload)
-				free(ringbuffer[ringbuffer_head].payload);
+			if (wss->ringbuffer[wss->ringbuffer_head].payload)
+				free(wss->ringbuffer[wss->ringbuffer_head].payload);
 
-			ringbuffer[ringbuffer_head].payload =
+			wss->ringbuffer[wss->ringbuffer_head].payload =
 					malloc(LWS_SEND_BUFFER_PRE_PADDING + len +
 							  LWS_SEND_BUFFER_POST_PADDING);
-			ringbuffer[ringbuffer_head].len = len;
-			memcpy((char *)ringbuffer[ringbuffer_head].payload +
+			wss->ringbuffer[wss->ringbuffer_head].len = len;
+			memcpy((char *)wss->ringbuffer[wss->ringbuffer_head].payload +
 						  LWS_SEND_BUFFER_PRE_PADDING, in, len);
-			if (ringbuffer_head == (MAX_MESSAGE_QUEUE - 1))
-				ringbuffer_head = 0;
+			if (wss->ringbuffer_head == (MAX_MESSAGE_QUEUE - 1))
+				wss->ringbuffer_head = 0;
 			else
-				ringbuffer_head++;
+				wss->ringbuffer_head++;
 
-			if (((ringbuffer_head - pss->ringbuffer_tail) &
+			if (((wss->ringbuffer_head - pss->ringbuffer_tail) &
 					  (MAX_MESSAGE_QUEUE - 1)) != (MAX_MESSAGE_QUEUE - 2))
 				goto done;
 

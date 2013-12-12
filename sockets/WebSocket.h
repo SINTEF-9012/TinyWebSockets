@@ -19,7 +19,6 @@ class WebSocket : Socket {
 
 	public:
 		WebSocket(int _port);
-		WebSocket(int _port, ThingMLCallback* _onopen, ThingMLCallback* _onclose, ThingMLCallback* _onerror, ThingMLCallback* _onmessage);
 		virtual ~WebSocket();
 		virtual int getPort();
 

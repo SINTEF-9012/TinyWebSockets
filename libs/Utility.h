@@ -13,6 +13,12 @@
 
 namespace WebSockets {
 
+
+	typedef int (wsspCallback)(struct libwebsocket_context *context,
+			struct libwebsocket *wsi,
+			enum libwebsocket_callback_reasons reason,
+						   void *user, void *in, size_t len);
+
 	//TODO: using of this structure requires the -fpermissive flag while compiling since it is not type safe
 	//probably we need to look into this
 	typedef void (*pthingMLCallback)(void* _instance, ...);

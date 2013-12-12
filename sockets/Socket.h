@@ -23,7 +23,6 @@ class Socket {
 
 	public:
 		Socket(int _port);
-		Socket(int _port, ThingMLCallback* _onopen, ThingMLCallback* _onclose, ThingMLCallback* _onmessage, ThingMLCallback* _onerror);
 		virtual ~Socket() {};
 		virtual int getPort(){return this->port;};
 
