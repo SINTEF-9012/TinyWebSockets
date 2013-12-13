@@ -66,6 +66,6 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	wss->Destroy();
+	WebSocketMirrorServer::Halt();
 	cout << "just before exit \n" << endl;
 }

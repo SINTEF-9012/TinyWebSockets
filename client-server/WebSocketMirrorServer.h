@@ -13,19 +13,9 @@
 #include "../sockets/WebSocket.h"
 #include "../libwebsockets/libwebsockets.h"
 #include "../libs/Constants.h"
+#include "../libs/Utility.h"
 
 using namespace WebSockets;
-
-struct per_session_data__lws_mirror {
-	struct libwebsocket *wsi;
-	int ringbuffer_tail;
-};
-
-struct a_message {
-	void *payload;
-	size_t len;
-};
-
 
 class WebSocketMirrorServer : WebSocket {
 
@@ -45,9 +35,10 @@ class WebSocketMirrorServer : WebSocket {
 		static WebSocketMirrorServer* Init(int _port, ThingMLCallback* _onopen, ThingMLCallback* _onclose, ThingMLCallback* _onmessage, ThingMLCallback* _onerror);
 		static WebSocketMirrorServer* Get();
 		static WebSocketMirrorServer* SetCallback(ThingMLCallback* _onopen, ThingMLCallback* _onclose, ThingMLCallback* _onmessage, ThingMLCallback* _onerror);
+		static void Halt();
 
 		virtual ~WebSocketMirrorServer();
-		static void Destroy();
+		virtual void Destroy();
 
 	public:
 		virtual int open();
@@ -57,6 +48,7 @@ class WebSocketMirrorServer : WebSocket {
 					struct libwebsocket *wsi,
 					enum libwebsocket_callback_reasons reason,
 							       void *user, void *in, size_t len);
+
 	private:
 		void reset();
 

@@ -13,6 +13,15 @@
 
 namespace WebSockets {
 
+	struct per_session_data__lws_mirror {
+		struct libwebsocket *wsi;
+		int ringbuffer_tail;
+	};
+
+	struct a_message {
+		void *payload;
+		size_t len;
+	};
 
 	typedef int (wsspCallback)(struct libwebsocket_context *context,
 			struct libwebsocket *wsi,

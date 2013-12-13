@@ -16,6 +16,7 @@
 #include "../libs/Log.h"
 #include "../libwebsockets/libwebsockets.h"
 #include "../libs/Constants.h"
+#include "../libs/Utility.h"
 
 using namespace WebSockets;
 
@@ -56,13 +57,17 @@ WebSocketMirrorServer* WebSocketMirrorServer::SetCallback(ThingMLCallback* _onop
 	return s_instance;
 }
 
-void WebSocketMirrorServer::Destroy(){
+void WebSocketMirrorServer::Halt(){
 	WebSocketMirrorServer *wss = WebSocketMirrorServer::Get();
 	Log::Write(LogLevel_Debug, "WebSocketMirrorServer::Destroy() : destroying object 0x%08x", wss);
 	if(s_instance != NULL){
-		delete wss;
+		wss->Destroy();
 		s_instance = NULL;
 	}
+}
+
+void WebSocketMirrorServer::Destroy(){
+	WebSocket::Destroy();
 }
 
 void WebSocketMirrorServer::reset(){
@@ -87,7 +92,7 @@ WebSocketMirrorServer::WebSocketMirrorServer(int _port) : WebSocket(_port){
 
 int WebSocketMirrorServer::getPort(){
 	return WebSocket::getPort();
-};
+}
 
 WebSocketMirrorServer::~WebSocketMirrorServer(){
 	Log::Write(LogLevel_Debug, "WebSocketMirrorServer:::~WebSocketMirrorServer() : destroying object 0x%08x", this);
@@ -167,7 +172,7 @@ void* WebSocketMirrorServer::startServicing(void* arg){
 		n = libwebsocket_service(wss->context, 50);
 
 	}
-	printf("stop servicing\n");
+	Log::Write(LogLevel_Debug, "WebSocketMirrorServer stops servicing\n");
 	libwebsocket_context_destroy(wss->context);
 
 	lwsl_notice("libwebsockets-test-server exited cleanly\n");

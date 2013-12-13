@@ -35,3 +35,7 @@ void WebSocket::setObserver(ThingMLCallback* _onopen,
 	this->observer = new WebSocketObserver(this->onopen, this->onclose, this->onmessage, this->onerror);
 }
 
+void WebSocket::Destroy(){
+	delete this;
+}
+
