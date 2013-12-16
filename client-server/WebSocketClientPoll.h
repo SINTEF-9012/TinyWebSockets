@@ -12,11 +12,12 @@
 #include <iostream>
 #include <list>
 
-#include "../sockets/WebSocket.h"
 #include "../libs/Utility.h"
 
 using namespace WebSockets;
 using namespace std;
+
+class WebSocketClient;
 
 class WebSocketClientPoll {
 
@@ -24,7 +25,7 @@ class WebSocketClientPoll {
 		static WebSocketClientPoll* s_instance;
 
 	private:
-		list<WebSocket*> clients;
+		list<WebSocketClient*> clients;
 		WebSocketClientPoll();
 		~WebSocketClientPoll();
 
@@ -32,9 +33,8 @@ class WebSocketClientPoll {
 		static WebSocketClientPoll* Init();
 		static WebSocketClientPoll* Get();
 		static void Destroy();
-		list<WebSocket*> getClients();
-		void appendClient(WebSocket* client);
-
+		list<WebSocketClient*> getClients();
+		void appendClient(WebSocketClient* client);
 };
 
 

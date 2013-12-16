@@ -10,8 +10,12 @@
 
 #include "../libwebsockets/libwebsockets.h"
 #include "../libs/Utility.h"
-#include "WebSocketClientPoll.h"
+#include "../sockets/WebSocket.h"
+//#include "WebSocketClientPoll.h"
 
+using namespace WebSockets;
+
+class WebSocketClientPoll;
 
 class WebSocketClient : WebSocket {
 
@@ -20,6 +24,7 @@ class WebSocketClient : WebSocket {
 		struct libwebsocket *wsi;
 		const char* host;
 		const char* subprotocol;
+		char* messageToSend;
 
 	private:
 		int force_exit;
@@ -40,6 +45,7 @@ class WebSocketClient : WebSocket {
 					struct libwebsocket *wsi,
 					enum libwebsocket_callback_reasons reason,
 							       void *user, void *in, size_t len);
+		virtual void setCallbacks(ThingMLCallback* _onopen, ThingMLCallback* _onclose, ThingMLCallback* _onmessage, ThingMLCallback* _onerror);
 
 	private:
 		void reset();

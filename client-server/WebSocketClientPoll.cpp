@@ -10,7 +10,8 @@
 
 
 #include "WebSocketClientPoll.h"
-#include "../sockets/WebSocket.h"
+//#include "../sockets/WebSocket.h"
+#include "WebSocketClient.h"
 
 using namespace WebSockets;
 using namespace std;
@@ -28,7 +29,7 @@ WebSocketClientPoll::WebSocketClientPoll(){}
 
 WebSocketClientPoll::~WebSocketClientPoll(){}
 
-void WebSocketClientPoll::appendClient(WebSocket* client){
+void WebSocketClientPoll::appendClient(WebSocketClient* client){
 	clients.push_back(client);
 }
 
@@ -38,15 +39,15 @@ WebSocketClientPoll* WebSocketClientPoll::Get(){
 
 void WebSocketClientPoll::Destroy(){
 	WebSocketClientPoll* wscp = WebSocketClientPoll::Get();
-	list<WebSocket*> clients = wscp->getClients();
-	for(list<WebSocket*>::iterator it =  clients.begin(); it != clients.end(); ++it){
+	list<WebSocketClient*> clients = wscp->getClients();
+	for(list<WebSocketClient*>::iterator it =  clients.begin(); it != clients.end(); ++it){
 		(*it)->Destroy();
 	}
 	delete s_instance;
 	s_instance = NULL;
 }
 
-list<WebSocket*> WebSocketClientPoll::getClients(){
+list<WebSocketClient*> WebSocketClientPoll::getClients(){
 	return clients;
 }
 
