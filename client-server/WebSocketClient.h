@@ -27,11 +27,11 @@ class WebSocketClient : WebSocket {
 
 	private:
 		int force_exit;
-		WebSocketFacade* client_poll;
+		WebSocketFacade* facade;
+		int is_connected;
 
 	public:
-		WebSocketClient(WebSocketFacade* client_poll, const char* host, int port, const char* subprotocol);
-		WebSocketClient(int _port);
+		WebSocketClient(WebSocketFacade* facade, const char* host, int port, const char* subprotocol);
 		virtual ~WebSocketClient();
 		virtual void Destroy();
 

@@ -34,48 +34,57 @@ void on_message_callback(void* instance, char* message){
 	Log::Write(LogLevel_Info, "on_message_callback is called by 0x%08x with message %s", instance, message);
 }
 
-void sighandler(int sig)
-{
-	WebSocketMirrorServer* wss = WebSocketMirrorServer::Get();
-	wss->close();
-	wss->Destroy();
-}
 
 int main(int argc, char **argv) {
-	//signal(SIGINT, sighandler);
 	const char* localhost = "localhost";
 
 	//WebSocketClient* wcs = new WebSocketClient(WebSocketFacade::Init(), localhost, 7681, NULL);
 	WebSocketClient* wcs = WebSocketFacade::InitWebSocketClient(localhost, 7681, NULL);
+	WebSocketClient* wcs1 = WebSocketFacade::InitWebSocketClient(localhost, 7681, NULL);
 
 	ThingMLCallback* tml_op_open_callback = new ThingMLCallback(on_open_callback, wcs);
 	ThingMLCallback* tml_op_close_callback = new ThingMLCallback(on_close_callback, wcs);
 	ThingMLCallback* tml_op_error_callback = new ThingMLCallback(on_error_callback, wcs);
 	ThingMLCallback* tml_op_message_callback = new ThingMLCallback(on_message_callback, wcs);
 
+	ThingMLCallback* tml_op_open_callback1 = new ThingMLCallback(on_open_callback, wcs1);
+	ThingMLCallback* tml_op_close_callback1 = new ThingMLCallback(on_close_callback, wcs1);
+	ThingMLCallback* tml_op_error_callback1 = new ThingMLCallback(on_error_callback, wcs1);
+	ThingMLCallback* tml_op_message_callback1 = new ThingMLCallback(on_message_callback, wcs1);
+
 	wcs->setCallbacks(tml_op_open_callback, tml_op_close_callback, tml_op_message_callback, tml_op_error_callback);
+	wcs1->setCallbacks(tml_op_open_callback1, tml_op_close_callback1, tml_op_message_callback1, tml_op_error_callback1);
 
 	cout << "just before while !!!\n" << endl;
 
-	char ch;
+	string ch;
 	bool loop = true;
 	while (loop){
-		cin >> ch;
-		if(ch == 'c'){
+		getline(cin, ch);
+		if(ch == "c"){
 			wcs->close();
 		}
-		if(ch == 'q'){
+		if(ch == "q"){
 			loop = false;
 		}
-		if(ch == 'o'){
+		if(ch == "o"){
 			wcs->open();
 		}
-		if(ch == 's'){
+		if(ch == "s"){
 			wcs->sendMessage("something");
+		}
+		if(ch == "c1"){
+			wcs1->close();
+		}
+		if(ch == "o1"){
+			wcs1->open();
+		}
+		if(ch == "s1"){
+			wcs1->sendMessage("something1");
 		}
 	}
 
-	//wcs->Destroy();
+	cout << "before destroy!!! \n" << endl;
 	WebSocketFacade::Destroy();
 	cout << "just before exit \n" << endl;
 }

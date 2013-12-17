@@ -23,6 +23,7 @@ int WebSocketFacade::default_debug_level = 7;
 
 WebSocketFacade::WebSocketFacade(){
 	this->mirrorServer = NULL;
+	this->clients;
 }
 
 WebSocketFacade::~WebSocketFacade(){}
