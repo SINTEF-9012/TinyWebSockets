@@ -12,7 +12,7 @@
 #include "libs/Log.h"
 #include "libs/Utility.h"
 
-#include "client-server/WebSocketClientPoll.h"
+#include "client-server/WebSocketFacade.h"
 #include "client-server/WebSocketClient.h"
 
 using namespace std;
@@ -43,9 +43,10 @@ void sighandler(int sig)
 
 int main(int argc, char **argv) {
 	//signal(SIGINT, sighandler);
-	char* localhost = "localhost";
+	const char* localhost = "localhost";
 
-	WebSocketClient* wcs = new WebSocketClient(WebSocketClientPoll::Init(), localhost, 7681, NULL);
+	//WebSocketClient* wcs = new WebSocketClient(WebSocketFacade::Init(), localhost, 7681, NULL);
+	WebSocketClient* wcs = WebSocketFacade::InitWebSocketClient(localhost, 7681, NULL);
 
 	ThingMLCallback* tml_op_open_callback = new ThingMLCallback(on_open_callback, wcs);
 	ThingMLCallback* tml_op_close_callback = new ThingMLCallback(on_close_callback, wcs);
@@ -74,6 +75,7 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	wcs->Destroy();
+	//wcs->Destroy();
+	WebSocketFacade::Destroy();
 	cout << "just before exit \n" << endl;
 }

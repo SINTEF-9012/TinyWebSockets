@@ -17,37 +17,42 @@
 
 using namespace WebSockets;
 
+class WebSocketFacade;
+
 class WebSocketMirrorServer : WebSocket {
+
+	private:
+		WebSocketMirrorServer(WebSocketFacade* facade, int _port, const char* subprotocol);
+		virtual ~WebSocketMirrorServer();
+
+	public:
+		int force_exit;
+		int ringbuffer_head;
+		const char* subprotocol;
 
 	public:
 		static WebSocketMirrorServer* s_instance;
-		static const char *web_socket_subprotocol;
+		static const char* web_socket_subprotocol;
 		struct libwebsocket_context *context;
-
-		int force_exit;
-		int ringbuffer_head;
 		struct a_message ringbuffer[MAX_MESSAGE_QUEUE];
 
-		WebSocketMirrorServer(int _port);
-		virtual int getPort();
-
-		static WebSocketMirrorServer* Init(int _port);
-		static WebSocketMirrorServer* Init(int _port, ThingMLCallback* _onopen, ThingMLCallback* _onclose, ThingMLCallback* _onmessage, ThingMLCallback* _onerror);
+		static WebSocketMirrorServer* Init(WebSocketFacade* facade, int _port, const char* subprotocol);
 		static WebSocketMirrorServer* Get();
-		static WebSocketMirrorServer* SetCallback(ThingMLCallback* _onopen, ThingMLCallback* _onclose, ThingMLCallback* _onmessage, ThingMLCallback* _onerror);
-		static void Halt();
-
-		virtual ~WebSocketMirrorServer();
-		virtual void Destroy();
-
-	public:
-		virtual int open();
-		virtual int close();
-		virtual int sendMessage(char* message);
 		static int callback_web_socket_server(struct libwebsocket_context *context,
 					struct libwebsocket *wsi,
 					enum libwebsocket_callback_reasons reason,
 							       void *user, void *in, size_t len);
+		static void Halt();
+		static void* startServicing(void *ptr);
+
+	public:
+		virtual WebSocketMirrorServer* setCallbacks(ThingMLCallback* _onopen, ThingMLCallback* _onclose,
+				ThingMLCallback* _onmessage, ThingMLCallback* _onerror);
+		virtual int open();
+		virtual int close();
+		virtual int sendMessage(const char* message);
+		virtual void Destroy();
+		virtual int getPort();
 
 	private:
 		void reset();
@@ -55,11 +60,8 @@ class WebSocketMirrorServer : WebSocket {
 	protected:
 		virtual void onOpen();
 		virtual void onClose();
-		virtual void onError(char*error);
-		virtual void onMessage(char* message);
-
-		static void* startServicing(void *ptr);
-
+		virtual void onError(const char*error);
+		virtual void onMessage(const char* message);
 };
 
 

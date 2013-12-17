@@ -32,7 +32,7 @@ WebSocketObserver::WebSocketObserver()
 	this->error_callback = NULL;
 }
 
-void WebSocketObserver::onMessage(char* message){
+void WebSocketObserver::onMessage(const char* message){
 	Log::Write(LogLevel_Info, "WebSocketObserver::onMessage is called");
 	if(this->msg_callback != NULL){
 		this->msg_callback->fn_callback(this->msg_callback->instance, message);
@@ -41,7 +41,7 @@ void WebSocketObserver::onMessage(char* message){
 	}
 }
 
-void WebSocketObserver::onError(char* error){
+void WebSocketObserver::onError(const char* error){
 	Log::Write(LogLevel_Info, "WebSocketObserver::onError is called");
 	if(this->error_callback != NULL){
 		this->error_callback->fn_callback(this->error_callback->instance, error);
@@ -81,65 +81,5 @@ WebSocketObserver::~WebSocketObserver(){
 	}
 	if(this->close_callback != NULL){
 		delete this->close_callback;
-	}
-}
-
-
-
-void dump_handshake_info(struct libwebsocket *wsi)
-{
-	int n;
-	static const char *token_names[] = {
-		/*[WSI_TOKEN_GET_URI]		=*/ "GET URI",
-		/*[WSI_TOKEN_POST_URI]		=*/ "POST URI",
-		/*[WSI_TOKEN_HOST]		=*/ "Host",
-		/*[WSI_TOKEN_CONNECTION]	=*/ "Connection",
-		/*[WSI_TOKEN_KEY1]		=*/ "key 1",
-		/*[WSI_TOKEN_KEY2]		=*/ "key 2",
-		/*[WSI_TOKEN_PROTOCOL]		=*/ "Protocol",
-		/*[WSI_TOKEN_UPGRADE]		=*/ "Upgrade",
-		/*[WSI_TOKEN_ORIGIN]		=*/ "Origin",
-		/*[WSI_TOKEN_DRAFT]		=*/ "Draft",
-		/*[WSI_TOKEN_CHALLENGE]		=*/ "Challenge",
-
-		/* new for 04 */
-		/*[WSI_TOKEN_KEY]		=*/ "Key",
-		/*[WSI_TOKEN_VERSION]		=*/ "Version",
-		/*[WSI_TOKEN_SWORIGIN]		=*/ "Sworigin",
-
-		/* new for 05 */
-		/*[WSI_TOKEN_EXTENSIONS]	=*/ "Extensions",
-
-		/* client receives these */
-		/*[WSI_TOKEN_ACCEPT]		=*/ "Accept",
-		/*[WSI_TOKEN_NONCE]		=*/ "Nonce",
-		/*[WSI_TOKEN_HTTP]		=*/ "Http",
-
-		"Accept:",
-		"If-Modified-Since:",
-		"Accept-Encoding:",
-		"Accept-Language:",
-		"Pragma:",
-		"Cache-Control:",
-		"Authorization:",
-		"Cookie:",
-		"Content-Length:",
-		"Content-Type:",
-		"Date:",
-		"Range:",
-		"Referer:",
-		"Uri-Args:",
-
-		/*[WSI_TOKEN_MUXURL]	=*/ "MuxURL",
-	};
-	char buf[256];
-
-	for (n = 0; n < sizeof(token_names) / sizeof(token_names[0]); n++) {
-		if (!lws_hdr_total_length(wsi, n))
-			continue;
-
-		lws_hdr_copy(wsi, buf, sizeof buf, n);
-
-		fprintf(stderr, "    %s = %s\n", token_names[n], buf);
 	}
 }

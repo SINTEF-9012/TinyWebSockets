@@ -12,7 +12,7 @@
 #include "libs/Log.h"
 #include "libs/Utility.h"
 
-#include "client-server/WebSocketClientPoll.h"
+#include "client-server/WebSocketFacade.h"
 #include "client-server/WebSocketClient.h"
 
 using namespace std;
@@ -44,20 +44,24 @@ void sighandler(int sig)
 int main(int argc, char **argv) {
 	//signal(SIGINT, sighandler);
 
-	WebSocketMirrorServer* wss = WebSocketMirrorServer::Init(7681);
+	//WebSocketMirrorServer* wss = WebSocketMirrorServer::Init(7681);
+	WebSocketMirrorServer* wss = WebSocketFacade::InitWebSocketMirrorServer(7681, NULL);
 
 	ThingMLCallback* tml_op_open_callback = new ThingMLCallback(on_open_callback, wss);
 	ThingMLCallback* tml_op_close_callback = new ThingMLCallback(on_close_callback, wss);
 	ThingMLCallback* tml_op_error_callback = new ThingMLCallback(on_error_callback, wss);
 	ThingMLCallback* tml_op_message_callback = new ThingMLCallback(on_message_callback, wss);
 
-	wss = WebSocketMirrorServer::SetCallback(tml_op_open_callback, tml_op_close_callback, tml_op_message_callback, tml_op_error_callback);
+	wss->setCallbacks(tml_op_open_callback, tml_op_close_callback, tml_op_message_callback, tml_op_error_callback);
+	//wss = WebSocketMirrorServer::SetCallback(tml_op_open_callback, tml_op_close_callback, tml_op_message_callback, tml_op_error_callback);
 
+	const char* localhost = "localhost";
 
-	char* localhost = "localhost";
+	//WebSocketClient* wsc1 = new WebSocketClient(WebSocketFacade::Init(), localhost, 7681, NULL);
+	//WebSocketClient* wsc2 = new WebSocketClient(WebSocketFacade::Init(), localhost, 7681, NULL);
 
-	WebSocketClient* wsc1 = new WebSocketClient(WebSocketClientPoll::Init(), localhost, 7681, NULL);
-	WebSocketClient* wsc2 = new WebSocketClient(WebSocketClientPoll::Init(), localhost, 7681, NULL);
+	WebSocketClient* wsc1 = WebSocketFacade::InitWebSocketClient(localhost, 7681, NULL);
+	WebSocketClient* wsc2 = WebSocketFacade::InitWebSocketClient(localhost, 7681, NULL);
 
 	ThingMLCallback* tml_op_open_callback1 = new ThingMLCallback(on_open_callback, wsc1);
 		ThingMLCallback* tml_op_close_callback1 = new ThingMLCallback(on_close_callback, wsc1);
@@ -101,6 +105,7 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	WebSocketMirrorServer::Halt();
+	//WebSocketMirrorServer::Halt();
+	WebSocketFacade::Destroy();
 	cout << "just before exit \n" << endl;
 }

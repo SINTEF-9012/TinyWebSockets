@@ -18,19 +18,19 @@
 #include "../libs/Utility.h"
 #include "../libs/Log.h"
 
-#include "WebSocketClientPoll.h"
+#include "WebSocketFacade.h"
 
 using namespace WebSockets;
 using namespace std;
 
-WebSocketClient::WebSocketClient(WebSocketClientPoll* client_poll, char* host, int port, char* subprotocol) : WebSocket(port) {
+WebSocketClient::WebSocketClient(WebSocketFacade* client_poll, const char* host, int port, const char* subprotocol) : WebSocket(port) {
 	this->host = host;
 	this->subprotocol = subprotocol;
 	this->context = NULL;
 	this->wsi = NULL;
 	this->force_exit = 0;
 	this->client_poll = client_poll;
-	this->client_poll->appendClient(this);
+	this->client_poll->addWebSocketClient(this);
 	this->messageToSend = NULL;
 }
 
@@ -112,13 +112,6 @@ int WebSocketClient::open(){
 	}
 
 	Log::Write(LogLevel_Info, "Client 0x%08x is waiting for connect...\n", this);
-
-	/*
-	 * sit there servicing the websocket context to handle incoming
-	 * packets, and drawing random circles on the mirror protocol websocket
-	 * nothing happens until the client websocket connection is
-	 * asynchronously established
-	 */
 	int iret1 = pthread_create(&thread, NULL, &startServicing, this);
 	return iret1;
 }
@@ -128,7 +121,7 @@ int WebSocketClient::close(){
 	return 0;
 }
 
-int WebSocketClient::sendMessage(char* message) {
+int WebSocketClient::sendMessage(const char* message) {
 	this->messageToSend = message;
 	libwebsocket_callback_on_writable(this->context, this->wsi);
 	return 0;
@@ -140,9 +133,9 @@ int WebSocketClient::callback_web_socket_client(struct libwebsocket_context *con
 					       void *user, void *in, size_t len){
 
 	if(wsi != NULL){
-		WebSocketClientPoll* poll = WebSocketClientPoll::Get();
+		WebSocketFacade* poll = WebSocketFacade::Get();
 		WebSocketClient* client = NULL;
-		list<WebSocketClient*> clients = poll->getClients();
+		list<WebSocketClient*> clients = poll->GetWebSocketClients();
 		for(list<WebSocketClient*>::iterator it = clients.begin(); it != clients.end(); ++it){
 			WebSocketClient* wsc_buf = (WebSocketClient*) (*it);
 			if(wsi == wsc_buf->wsi){
@@ -172,9 +165,7 @@ int WebSocketClient::callback_web_socket_client(struct libwebsocket_context *con
 			case LWS_CALLBACK_CLIENT_WRITEABLE: {
 					if(client->messageToSend != NULL){
 						int message_size = strlen(client->messageToSend);
-
 						void *payload = malloc(LWS_SEND_BUFFER_PRE_PADDING + message_size + LWS_SEND_BUFFER_POST_PADDING);
-
 						memcpy(payload + LWS_SEND_BUFFER_PRE_PADDING, client->messageToSend, message_size);
 						int n = libwebsocket_write(wsi, (unsigned char *) payload + LWS_SEND_BUFFER_PRE_PADDING, message_size, LWS_WRITE_TEXT);
 						free(payload);
@@ -215,11 +206,11 @@ void WebSocketClient::onClose(){
 	this->observer->onClose();
 }
 
-void WebSocketClient::onError(char* error){
+void WebSocketClient::onError(const char* error){
 	this->observer->onError(error);
 }
 
-void WebSocketClient::onMessage(char* message){
+void WebSocketClient::onMessage(const char* message){
 	this->observer->onMessage(message);
 }
 
@@ -227,7 +218,7 @@ void* WebSocketClient::startServicing(void *ptr){
 	WebSocketClient* client = (WebSocketClient*) ptr;
 	int n = 0;
 	while (n >= 0 && !client->force_exit) {
-		n = libwebsocket_service(client->context, 10);
+		n = libwebsocket_service(client->context, 50);
 	}
 	Log::Write(LogLevel_Debug, "WebSocketClient 0x%08x stops servicing\n", client);
 	libwebsocket_context_destroy(client->context);

@@ -13,6 +13,7 @@
 #include <pthread.h>
 
 #include "WebSocketMirrorServer.h"
+#include "WebSocketFacade.h"
 #include "../libs/Log.h"
 #include "../libwebsockets/libwebsockets.h"
 #include "../libs/Constants.h"
@@ -22,23 +23,11 @@ using namespace WebSockets;
 
 
 WebSocketMirrorServer* WebSocketMirrorServer::s_instance = NULL;
-const char *WebSocketMirrorServer::web_socket_subprotocol = LWS_MIRROR_PROTOCOL;
+const char* WebSocketMirrorServer::web_socket_subprotocol = LWS_MIRROR_PROTOCOL;
 
-WebSocketMirrorServer* WebSocketMirrorServer::Init(int _port,
-		ThingMLCallback* _onopen,
-		ThingMLCallback* _onclose,
-		ThingMLCallback* _onmessage,
-		ThingMLCallback* _onerror) {
+WebSocketMirrorServer* WebSocketMirrorServer::Init(WebSocketFacade* facade, int _port, const char* subprotocol) {
 	if(s_instance == NULL){
-		s_instance = new WebSocketMirrorServer(_port);
-		s_instance->setObserver(_onopen, _onclose, _onmessage, _onerror);
-	}
-	return s_instance;
-}
-
-WebSocketMirrorServer* WebSocketMirrorServer::Init(int _port) {
-	if(s_instance == NULL){
-		s_instance = new WebSocketMirrorServer(_port);
+		s_instance = new WebSocketMirrorServer(facade, _port, subprotocol);
 	}
 	return s_instance;
 }
@@ -47,14 +36,15 @@ WebSocketMirrorServer* WebSocketMirrorServer::Get(){
 	return s_instance;
 }
 
-WebSocketMirrorServer* WebSocketMirrorServer::SetCallback(ThingMLCallback* _onopen,
+WebSocketMirrorServer* WebSocketMirrorServer::setCallbacks(ThingMLCallback* _onopen,
 		ThingMLCallback* _onclose,
 		ThingMLCallback* _onmessage,
 		ThingMLCallback* _onerror){
-	if(s_instance != NULL){
-		s_instance->setObserver(_onopen, _onclose, _onmessage, _onerror);
+	WebSocketMirrorServer* server = WebSocketMirrorServer::Get();
+	if(server != NULL){
+		server->setObserver(_onopen, _onclose, _onmessage, _onerror);
 	}
-	return s_instance;
+	return server;
 }
 
 void WebSocketMirrorServer::Halt(){
@@ -79,8 +69,9 @@ void WebSocketMirrorServer::reset(){
 	}
 }
 
-WebSocketMirrorServer::WebSocketMirrorServer(int _port) : WebSocket(_port){
+WebSocketMirrorServer::WebSocketMirrorServer(WebSocketFacade* facade, int _port, const char* subprotocol) : WebSocket(_port){
 	s_instance = this;
+	this->subprotocol = (subprotocol == NULL) ? web_socket_subprotocol : subprotocol;
 	this->ringbuffer_head = 0;
 	this->context = NULL;
 	this->force_exit = 0;
@@ -88,6 +79,7 @@ WebSocketMirrorServer::WebSocketMirrorServer(int _port) : WebSocket(_port){
 		this->ringbuffer[n].payload = NULL;
 		this->ringbuffer[n].len = 0;
 	}
+	facade->setWebSocketMirrorServer(this);
 }
 
 int WebSocketMirrorServer::getPort(){
@@ -103,10 +95,6 @@ int WebSocketMirrorServer::open(){
 	pthread_t thread;
 	this->force_exit = 0;
 	const char *iface = NULL;
-#ifndef WIN32
-	int syslog_options = LOG_PID | LOG_PERROR;
-#endif
-	int debug_level = 7;
 	struct lws_context_creation_info info;
 
 	static struct libwebsocket_protocols protocols[] = {
@@ -121,17 +109,6 @@ int WebSocketMirrorServer::open(){
 
 	memset(&info, 0, sizeof info);
 	info.port = this->getPort();
-
-
-#ifndef WIN32
-	/* we will only try to log things according to our debug_level */
-	setlogmask(LOG_UPTO (LOG_DEBUG));
-	openlog("lwsts", syslog_options, LOG_DAEMON);
-#endif
-
-	/* tell the library what debug level to emit and to send it to syslog */
-	lws_set_log_level(debug_level, lwsl_emit_syslog);
-
 	info.iface = iface;
 	info.protocols = protocols;
 
@@ -160,26 +137,12 @@ void* WebSocketMirrorServer::startServicing(void* arg){
 	WebSocketMirrorServer* wss = (WebSocketMirrorServer*) arg;
 	int n = 0;
 	while (n >= 0 && !wss->force_exit) {
-		/*
-		 * If libwebsockets sockets are all we care about,
-		 * you can use this api which takes care of the poll()
-		 * and looping through finding who needed service.
-		 *
-		 * If no socket needs service, it'll return anyway after
-		 * the number of ms in the second argument.
-		 */
-
 		n = libwebsocket_service(wss->context, 50);
-
 	}
 	Log::Write(LogLevel_Debug, "WebSocketMirrorServer stops servicing\n");
 	libwebsocket_context_destroy(wss->context);
 
 	lwsl_notice("libwebsockets-test-server exited cleanly\n");
-
-#ifndef WIN32
-	closelog();
-#endif
 	return NULL;
 }
 
@@ -188,7 +151,7 @@ int WebSocketMirrorServer::close(){
 	return 0;
 }
 
-int WebSocketMirrorServer::sendMessage(char* message){
+int WebSocketMirrorServer::sendMessage(const char* message){
 	return 0;
 }
 
@@ -196,11 +159,11 @@ void WebSocketMirrorServer::onClose(){
 	this->observer->onClose();
 }
 
-void WebSocketMirrorServer::onError(char* error){
+void WebSocketMirrorServer::onError(const char* error){
 	this->observer->onError(error);
 }
 
-void WebSocketMirrorServer::onMessage(char* message){
+void WebSocketMirrorServer::onMessage(const char* message){
 	this->observer->onMessage(message);
 }
 
@@ -214,7 +177,6 @@ int WebSocketMirrorServer::callback_web_socket_server(struct libwebsocket_contex
 		enum libwebsocket_callback_reasons reason,
 				       void *user, void *in, size_t len){
 	int n;
-	char *error_message = "";
 	WebSocketMirrorServer* wss = WebSocketMirrorServer::Get();
 	struct per_session_data__lws_mirror *pss = (struct per_session_data__lws_mirror *) user;
 
@@ -242,15 +204,15 @@ int WebSocketMirrorServer::callback_web_socket_server(struct libwebsocket_contex
 					   wss->ringbuffer[pss->ringbuffer_tail].len,
 									LWS_WRITE_TEXT);
 				if (n < (int) wss->ringbuffer[pss->ringbuffer_tail].len) {
-					sprintf(error_message, "ERROR %d writing to mirror socket\n", n);
-					lwsl_err(error_message);
+					const char *error_message = "ERROR writing to mirror socket";
+					lwsl_err("%s\n", error_message);
 					wss->onError(error_message);
 					return -1;
 				}
 				if (n < (int) wss->ringbuffer[pss->ringbuffer_tail].len){
-					sprintf(error_message, "mirror partial write %d vs %d\n",
+					const char *error_message = "mirror partial write";
+					lwsl_err("%s %d vs %d\n", error_message,
 							n, wss->ringbuffer[pss->ringbuffer_tail].len);
-					lwsl_err(error_message);
 					wss->onError(error_message);
 				}
 
@@ -272,10 +234,9 @@ int WebSocketMirrorServer::callback_web_socket_server(struct libwebsocket_contex
 			break;
 
 		case LWS_CALLBACK_RECEIVE:
-
 			if (((wss->ringbuffer_head - pss->ringbuffer_tail) &
 					  (MAX_MESSAGE_QUEUE - 1)) == (MAX_MESSAGE_QUEUE - 1)) {
-				error_message = "dropping!\n";
+				const char *error_message = "LWS_CALLBACK_RECEIVE: throttling!\n";;
 				lwsl_err(error_message);
 				wss->onError(error_message);
 				goto choke;
@@ -300,7 +261,6 @@ int WebSocketMirrorServer::callback_web_socket_server(struct libwebsocket_contex
 				goto done;
 
 choke:
-			lwsl_debug("LWS_CALLBACK_RECEIVE: throttling %p\n", wsi);
 			libwebsocket_rx_flow_control(wsi, 0);
 
 done:
@@ -309,15 +269,8 @@ done:
 			wss->onMessage((char*) in);
 			break;
 
-		/*
-		 * this just demonstrates how to use the protocol filter. If you won't
-		 * study and reject connections based on header content, you don't need
-		 * to handle this callback
-		 */
-
 		case LWS_CALLBACK_FILTER_PROTOCOL_CONNECTION:
-			dump_handshake_info(wsi);
-			/* you could return non-zero here and kill the connection */
+			Log::Write(LogLevel_Info, "WebSocketMirrorServer() : handshake\n");
 			break;
 
 		default:

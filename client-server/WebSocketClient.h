@@ -11,11 +11,10 @@
 #include "../libwebsockets/libwebsockets.h"
 #include "../libs/Utility.h"
 #include "../sockets/WebSocket.h"
-//#include "WebSocketClientPoll.h"
 
 using namespace WebSockets;
 
-class WebSocketClientPoll;
+class WebSocketFacade;
 
 class WebSocketClient : WebSocket {
 
@@ -24,14 +23,14 @@ class WebSocketClient : WebSocket {
 		struct libwebsocket *wsi;
 		const char* host;
 		const char* subprotocol;
-		char* messageToSend;
+		const char* messageToSend;
 
 	private:
 		int force_exit;
-		WebSocketClientPoll* client_poll;
+		WebSocketFacade* client_poll;
 
 	public:
-		WebSocketClient(WebSocketClientPoll* client_poll, char* host, int port, char* subprotocol);
+		WebSocketClient(WebSocketFacade* client_poll, const char* host, int port, const char* subprotocol);
 		WebSocketClient(int _port);
 		virtual ~WebSocketClient();
 		virtual void Destroy();
@@ -40,7 +39,7 @@ class WebSocketClient : WebSocket {
 		virtual int getPort();
 		virtual int open();
 		virtual int close();
-		virtual int sendMessage(char* message);
+		virtual int sendMessage(const char* message);
 		static int callback_web_socket_client(struct libwebsocket_context *context,
 					struct libwebsocket *wsi,
 					enum libwebsocket_callback_reasons reason,
@@ -53,8 +52,8 @@ class WebSocketClient : WebSocket {
 	protected:
 		virtual void onOpen();
 		virtual void onClose();
-		virtual void onError(char*error);
-		virtual void onMessage(char* message);
+		virtual void onError(const char*error);
+		virtual void onMessage(const char* message);
 
 		static void* startServicing(void *ptr);
 
