@@ -1,0 +1,25 @@
+GPP = g++
+LIBS = -lpthread -lwebsockets
+CFLAGS = -DDEBUG -Wall -fpermissive
+
+TINY_WEB_SOCKETS = ./tiny-web-sockets
+
+SRCS_TINY = $(TINY_WEB_SOCKETS)/sockets/WebSocket.cpp $(TINY_WEB_SOCKETS)/libs/Log.cpp $(TINY_WEB_SOCKETS)/libs/Utility.cpp $(TINY_WEB_SOCKETS)/client-server/WebSocketMirrorServer.cpp $(TINY_WEB_SOCKETS)/client-server/WebSocketFacade.cpp $(TINY_WEB_SOCKETS)/client-server/WebSocketClient.cpp
+OBJS_TINY = $(TINY_WEB_SOCKETS)/sockets/WebSocket.o $(TINY_WEB_SOCKETS)/libs/Log.o $(TINY_WEB_SOCKETS)/libs/Utility.o $(TINY_WEB_SOCKETS)/client-server/WebSocketMirrorServer.o $(TINY_WEB_SOCKETS)/client-server/WebSocketFacade.o $(TINY_WEB_SOCKETS)/client-server/WebSocketClient.o
+
+SRCS = WebSMirrorServer.cpp Test.cpp WebSClient.cpp ClockLinux.cpp testWS.cpp runtime.cpp
+OBJS = WebSMirrorServer.o Test.o WebSClient.o ClockLinux.o testWS.o runtime.o
+
+ALL_SRCS = $(SRCS) $(SRCS_TINY)
+ALL_OBJ = $(OBJS) $(OBJS_TINY)
+
+%.o : %.cpp
+	${GPP} ${CFLAGS} -c -o $@ $< 
+
+all : testWS
+
+testWS : $(ALL_OBJ)
+	$(GPP) -g -o $@ $(ALL_OBJ) $(LIBS) -lm
+
+clean:
+	rm -f $(ALL_OBJ) *~ testWS
