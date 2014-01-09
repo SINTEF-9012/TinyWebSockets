@@ -78,30 +78,36 @@ int main(int argc, char **argv) {
 
 	cout << "just before while !!!\n" << endl;
 
-	char ch;
+	string ch;
 	bool loop = true;
 	while (loop){
-		cin >> ch;
-		if(ch == 'c'){
+		getline(cin, ch);
+		if(ch == "c"){
 			wss->close();
 		}
-		if(ch == 'q'){
+		if(ch == "q"){
 			loop = false;
 		}
-		if(ch == 'o'){
+		if(ch == "o"){
 			wss->open();
 		}
-		if(ch == 'p'){
+		if(ch == "o1"){
 			wsc1->open();
 		}
-		if(ch == 'e'){
+		if(ch == "o2"){
 			wsc2->open();
 		}
-		if(ch == 'z'){
+		if(ch == "s1"){
 			wsc1->sendMessage("wsc1->sendMessage");
 		}
-		if(ch == 'x'){
+		if(ch == "s2"){
 			wsc2->sendMessage("wsc2->sendMessage");
+		}
+		if(ch == "c1"){
+			wsc1->close();
+		}
+		if(ch == "c2"){
+			wsc2->close();
 		}
 	}
 
