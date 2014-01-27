@@ -7,6 +7,7 @@
 
 #include <signal.h>
 #include <iostream>
+#include <cstdarg>
 
 #include "client-server/WebSocketMirrorServer.h"
 #include "libs/Log.h"
@@ -18,19 +19,27 @@
 using namespace std;
 using namespace WebSockets;
 
-void on_open_callback(void* instance){
+void on_open_callback(void* instance, ...){
 	Log::Write(LogLevel_Info, "on_open_callback is called by 0x%08x", instance);
 }
 
-void on_close_callback(void* instance){
+void on_close_callback(void* instance, ...){
 	Log::Write(LogLevel_Info, "on_close_callback is called by 0x%08x", instance);
 }
 
-void on_error_callback(void* instance, char* message){
+void on_error_callback(void* instance, ...){
+	va_list arguments;
+	va_start(arguments, instance);
+	char* message = va_arg(arguments, char*);
+	va_end(arguments);
 	Log::Write(LogLevel_Info, "on_error_callback is called by 0x%08x with message %s", instance, message);
 }
 
-void on_message_callback(void* instance, char* message){
+void on_message_callback(void* instance, ...){
+	va_list arguments;
+	va_start(arguments, instance);
+	char* message = va_arg(arguments, char*);
+	va_end(arguments);
 	Log::Write(LogLevel_Info, "on_message_callback is called by 0x%08x with message %s", instance, message);
 }
 
