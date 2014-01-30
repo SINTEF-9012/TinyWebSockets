@@ -6,7 +6,7 @@ OBJS_CLIENT = run_client.o ./sockets/WebSocket.o ./libs/Log.o ./libs/Utility.o .
 
 GNUTLS := #-lgnutls
 LIBS = $(GNUTLS) -lpthread -lwebsockets
-CFLAGS = -DDEBUG -Wall -Wpointer-arith
+CFLAGS = -DDEBUG -Wall
 
 GPP = g++
 

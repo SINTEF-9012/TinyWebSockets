@@ -154,7 +154,7 @@ int WebSocketClient::callback_web_socket_client(struct libwebsocket_context *con
 			case LWS_CALLBACK_CLIENT_WRITEABLE: {
 					if(client->messageToSend != NULL){
 						int message_size = strlen(client->messageToSend);
-						void *payload = malloc(LWS_SEND_BUFFER_PRE_PADDING + message_size + LWS_SEND_BUFFER_POST_PADDING);
+						unsigned char *payload = (unsigned char*) malloc(LWS_SEND_BUFFER_PRE_PADDING + message_size + LWS_SEND_BUFFER_POST_PADDING);
 						memcpy(payload + LWS_SEND_BUFFER_PRE_PADDING, client->messageToSend, message_size);
 						int n = libwebsocket_write(wsi, (unsigned char *) payload + LWS_SEND_BUFFER_PRE_PADDING, message_size, LWS_WRITE_TEXT);
 						free(payload);
