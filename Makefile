@@ -35,7 +35,10 @@ run_client : $(OBJS_CLIENT)
 	$(GPP) -o $@ $(OBJS_CLIENT) $(LIBS) -lm
 	
 clean :
-	rm -rf $(OBJS) $(OBJS_CLIENT) run run_client $(DYNAMIC_LIB_LOCATION) $(STATIC_LIB_LOCATION)
+	rm -rf $(OBJS) $(OBJS_CLIENT) run run_client
+
+cleanlibs :
+	rm -rf $(DYNAMIC_LIB_LOCATION) $(STATIC_LIB_LOCATION)
 
 removeobj :
 	rm -rf $(LIB_OBJS)
