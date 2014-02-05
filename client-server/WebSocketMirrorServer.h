@@ -11,7 +11,7 @@
 #include <iostream>
 
 #include "../sockets/WebSocket.h"
-#include "../libwebsockets/libwebsockets.h"
+#include "libwebsockets.h"
 #include "../libs/Constants.h"
 #include "../libs/Utility.h"
 

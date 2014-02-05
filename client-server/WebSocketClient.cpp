@@ -14,7 +14,7 @@
 #include <list>
 
 #include "WebSocketClient.h"
-#include "../libwebsockets/libwebsockets.h"
+#include "libwebsockets.h"
 #include "../libs/Utility.h"
 #include "../libs/Log.h"
 

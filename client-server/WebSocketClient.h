@@ -8,7 +8,7 @@
 #ifndef WEBSOCKETCLIENT_H_
 #define WEBSOCKETCLIENT_H_
 
-#include "../libwebsockets/libwebsockets.h"
+#include "libwebsockets.h"
 #include "../libs/Utility.h"
 #include "../sockets/WebSocket.h"
 

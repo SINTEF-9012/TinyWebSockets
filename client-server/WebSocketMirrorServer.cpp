@@ -15,7 +15,7 @@
 #include "WebSocketMirrorServer.h"
 #include "WebSocketFacade.h"
 #include "../libs/Log.h"
-#include "../libwebsockets/libwebsockets.h"
+#include "libwebsockets.h"
 #include "../libs/Constants.h"
 #include "../libs/Utility.h"
 

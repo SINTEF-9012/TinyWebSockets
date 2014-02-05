@@ -9,7 +9,7 @@
 #define UTILITY_H_
 
 #include "Log.h"
-#include "../libwebsockets/libwebsockets.h"
+#include "libwebsockets.h"
 
 namespace WebSockets {
 

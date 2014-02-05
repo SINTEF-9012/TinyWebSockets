@@ -9,7 +9,7 @@
 #define WEBSOCKET_H_
 
 #include "../libs/Utility.h"
-#include "../libwebsockets/libwebsockets.h"
+#include "libwebsockets.h"
 
 using namespace WebSockets;
 

@@ -4,7 +4,7 @@ LIB_OBJS = ./sockets/WebSocket.o ./libs/Log.o ./libs/Utility.o ./client-server/W
 OBJS = run.o $(LIB_OBJS)
 
 STATIC_LIB_LOCATION = libtinyws.a
-DYNAMIC_LIB_LOCATION = libtinyws.so.1.0
+DYNAMIC_LIB_LOCATION = libtinyws.so
 
 SRCS_CLIENT = run_client.cpp $(LIB_SRCS)
 OBJS_CLIENT = run_client.o $(LIB_OBJS)
@@ -18,17 +18,17 @@ AR = ar
 LD = ld
 
 %.o : %.cpp
-	$(GPP) $(CFLAGS) -c -o $@ $<
+	$(GPP) $(CFLAGS) -fPIC -c -o $@ $<
 
 all : run run_client
 
 run : $(OBJS)
 	$(GPP) -o $@ $(OBJS) $(LIBS) -lm
 	
-staticlib : removeobj $(LIB_OBJS)
+staticlib : $(LIB_OBJS)
 	$(AR) rvs $(STATIC_LIB_LOCATION) $(LIB_OBJS)
 
-dynamiclib : removeobj setfpic $(LIB_OBJS)
+dynamiclib : $(LIB_OBJS)
 	$(GPP) -shared -o $(DYNAMIC_LIB_LOCATION) $(LIB_OBJS)
 
 run_client : $(OBJS_CLIENT)
@@ -39,10 +39,17 @@ clean :
 
 cleanlibs :
 	rm -rf $(DYNAMIC_LIB_LOCATION) $(STATIC_LIB_LOCATION)
-
-removeobj :
-	rm -rf $(LIB_OBJS)
 	
-setfpic :
-	$(eval CFLAGS := $(CFLAGS) -fPIC)
-	
+install: staticlib dynamiclib
+	install -d /usr/local
+	install -d /usr/local/lib
+	install -d /use/local/include
+	install -d /use/local/include/tinyws
+	install -d /usr/local/include/tinyws/client-server
+	install -d /usr/local/include/tinyws/libs
+	install -d /usr/local/include/tinyws/sockets
+	cp $(DYNAMIC_LIB_LOCATION) /usr/local/lib
+	cp $(STATIC_LIB_LOCATION) /usr/local/lib
+	cp -r ./client-server/*.h /usr/local/include/tinyws/client-server
+	cp -r ./libs/*.h /usr/local/include/tinyws/libs
+	cp -r ./sockets/*.h /usr/local/include/tinyws/sockets
