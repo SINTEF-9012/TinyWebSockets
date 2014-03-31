@@ -1,0 +1,11 @@
+digraph finite_state_machine {
+	rankdir=LR;
+	INIT_STATE [shape=circle label = "", style = filled, color = "black"];
+		INIT_STATE -> Init [label="init"];
+	Init [label="Init{i}", shape = ellipse];
+		Init -> Started [label="lifecycle?start_client"];
+	Started [label="Started{i}\nmessaging?send{a}", shape = ellipse];
+		Started -> Stopped [label="lifecycle?stop_client"];
+	Stopped [label="Stopped{i}", shape = ellipse];
+		Stopped -> Started [label="lifecycle?start_client"];
+}
