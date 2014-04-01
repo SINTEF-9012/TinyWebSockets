@@ -79,6 +79,10 @@ int WebSocketClient::open(){
 	info.gid = -1;
 	info.uid = -1;
 
+#ifdef LWS_USE_IPV6
+	info.options = LWS_SERVER_OPTION_DISABLE_IPV6;
+#endif
+
 	this->context = libwebsocket_create_context(&info);
 	if (this->context == NULL) {
 		Log::Write(LogLevel_Error, "WebSocketClient::open() : creating libwebsocket context failed\n");
