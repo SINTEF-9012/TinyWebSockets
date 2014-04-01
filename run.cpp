@@ -73,14 +73,14 @@ int main(int argc, char **argv) {
 	WebSocketClient* wsc2 = WebSocketFacade::InitWebSocketClient(localhost, 7681, NULL);
 
 	ThingMLCallback* tml_op_open_callback1 = new ThingMLCallback(on_open_callback, wsc1);
-		ThingMLCallback* tml_op_close_callback1 = new ThingMLCallback(on_close_callback, wsc1);
-		ThingMLCallback* tml_op_error_callback1 = new ThingMLCallback(on_error_callback, wsc1);
-		ThingMLCallback* tml_op_message_callback1 = new ThingMLCallback(on_message_callback, wsc1);
+	ThingMLCallback* tml_op_close_callback1 = new ThingMLCallback(on_close_callback, wsc1);
+	ThingMLCallback* tml_op_error_callback1 = new ThingMLCallback(on_error_callback, wsc1);
+	ThingMLCallback* tml_op_message_callback1 = new ThingMLCallback(on_message_callback, wsc1);
 
-		ThingMLCallback* tml_op_open_callback2 = new ThingMLCallback(on_open_callback, wsc2);
-				ThingMLCallback* tml_op_close_callback2 = new ThingMLCallback(on_close_callback, wsc2);
-				ThingMLCallback* tml_op_error_callback2 = new ThingMLCallback(on_error_callback, wsc2);
-				ThingMLCallback* tml_op_message_callback2 = new ThingMLCallback(on_message_callback, wsc2);
+	ThingMLCallback* tml_op_open_callback2 = new ThingMLCallback(on_open_callback, wsc2);
+	ThingMLCallback* tml_op_close_callback2 = new ThingMLCallback(on_close_callback, wsc2);
+	ThingMLCallback* tml_op_error_callback2 = new ThingMLCallback(on_error_callback, wsc2);
+	ThingMLCallback* tml_op_message_callback2 = new ThingMLCallback(on_message_callback, wsc2);
 
 	wsc1->setCallbacks(tml_op_open_callback1, tml_op_close_callback1, tml_op_message_callback1, tml_op_error_callback1);
 	wsc2->setCallbacks(tml_op_open_callback2, tml_op_close_callback2, tml_op_message_callback2, tml_op_error_callback2);

@@ -28,8 +28,6 @@ namespace WebSockets {
 			enum libwebsocket_callback_reasons reason,
 						   void *user, void *in, size_t len);
 
-	//TODO: using of this structure requires the -fpermissive flag while compiling since it is not type safe
-	//probably we need to look into this
 	typedef void (*pthingMLCallback)(void* _instance, ...);
 	struct ThingMLCallback {
 		pthingMLCallback fn_callback;
@@ -66,6 +64,11 @@ namespace WebSockets {
 			virtual void onOpen();
 			virtual void onClose();
 			virtual void onError(const char* error);
+
+			virtual void setMessageCallback(ThingMLCallback* _callback) {msg_callback = _callback;};
+			virtual void setOpenCallback(ThingMLCallback* _callback) {open_callback = _callback;};
+			virtual void setCloseCallback(ThingMLCallback* _callback) {close_callback = _callback;};
+			virtual void setErrorCallback(ThingMLCallback* _callback) {error_callback = _callback;};
 	};
 
 }
