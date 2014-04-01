@@ -13,6 +13,9 @@ GNUTLS := #-lgnutls
 LIBS = $(GNUTLS) -lpthread -lwebsockets
 CFLAGS = -DDEBUG -Wall
 
+LIBWEBSOCKETS = ../libwebsockets
+LIBWEBSOCKETS_BUILD_DIR = $(LIBWEBSOCKETS)/build
+
 GPP = g++
 AR = ar
 LD = ld
@@ -39,8 +42,13 @@ clean :
 
 cleanlibs :
 	rm -rf $(DYNAMIC_LIB_LOCATION) $(STATIC_LIB_LOCATION)
-	
-install: staticlib dynamiclib
+
+unistall:
+	rm -rf /usr/local/include/tinyws
+	rm -f /usr/local/lib/$(STATIC_LIB_LOCATION)
+	rm -f /usr/local/lib/$(DYNAMIC_LIB_LOCATION)
+
+install: staticlib dynamiclib unistall
 	install -d /usr/local
 	install -d /usr/local/lib
 	install -d /use/local/include
@@ -53,3 +61,23 @@ install: staticlib dynamiclib
 	cp -r ./client-server/*.h /usr/local/include/tinyws/client-server
 	cp -r ./libs/*.h /usr/local/include/tinyws/libs
 	cp -r ./sockets/*.h /usr/local/include/tinyws/sockets
+
+testwebsockets:
+	test -s $(LIBWEBSOCKETS_BUILD_DIR) || { echo "Cannot find built libwebsockets..."; exit 1; }
+	
+uninstallwebsockets:
+	rm -rf /usr/local/include/libwebsockets
+	rm -f /usr/local/lib/libwebsockets.so
+	rm -f /usr/local/lib/libwebsockets.so.4.0.0
+	rm -f /usr/local/lib/libwebsockets.a
+
+installwebsockets: uninstallwebsockets testwebsockets
+	install -d /usr/local
+	install -d /usr/local/lib
+	install -d /usr/local/include
+	install -d /usr/local/include/libwebsockets
+	install $(LIBWEBSOCKETS_BUILD_DIR)/lib/libwebsockets.so.4.0.0 /usr/local/lib/
+	ln -s /usr/local/lib/libwebsockets.so.4.0.0 /usr/local/lib/libwebsockets.so
+	install $(LIBWEBSOCKETS_BUILD_DIR)/lib/libwebsockets.a /usr/local/lib
+	cp $(LIBWEBSOCKETS_BUILD_DIR)/lws_config.h /usr/local/include/libwebsockets/lws_config.h
+	cp $(LIBWEBSOCKETS)/lib/libwebsockets.h /usr/local/include/libwebsockets/libwebsockets.h

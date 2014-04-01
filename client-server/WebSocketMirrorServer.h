@@ -10,8 +10,10 @@
 
 #include <iostream>
 
+#include "libwebsockets/lws_config.h"
+#include "libwebsockets/libwebsockets.h"
+
 #include "../sockets/WebSocket.h"
-#include "libwebsockets.h"
 #include "../libs/Constants.h"
 #include "../libs/Utility.h"
 

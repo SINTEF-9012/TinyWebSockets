@@ -12,10 +12,12 @@
 #include <syslog.h>
 #include <pthread.h>
 
+#include "libwebsockets/lws_config.h"
+#include "libwebsockets/libwebsockets.h"
+
 #include "WebSocketMirrorServer.h"
 #include "WebSocketFacade.h"
 #include "../libs/Log.h"
-#include "libwebsockets.h"
 #include "../libs/Constants.h"
 #include "../libs/Utility.h"
 
@@ -121,7 +123,10 @@ int WebSocketMirrorServer::open(){
 
 	info.gid = -1;
 	info.uid = -1;
-	info.options = 0;
+
+#ifdef LWS_USE_IPV6
+	info.options = LWS_SERVER_OPTION_DISABLE_IPV6;
+#endif
 
 	context = libwebsocket_create_context(&info);
 	if (context == NULL) {

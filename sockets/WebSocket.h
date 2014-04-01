@@ -8,8 +8,10 @@
 #ifndef WEBSOCKET_H_
 #define WEBSOCKET_H_
 
+#include "libwebsockets/lws_config.h"
+#include "libwebsockets/libwebsockets.h"
+
 #include "../libs/Utility.h"
-#include "libwebsockets.h"
 
 using namespace WebSockets;
 

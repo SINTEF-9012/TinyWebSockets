@@ -13,8 +13,10 @@
 #include <pthread.h>
 #include <list>
 
+#include "libwebsockets/lws_config.h"
+#include "libwebsockets/libwebsockets.h"
+
 #include "WebSocketClient.h"
-#include "libwebsockets.h"
 #include "../libs/Utility.h"
 #include "../libs/Log.h"
 
