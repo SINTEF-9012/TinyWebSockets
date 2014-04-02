@@ -1,0 +1,9 @@
+digraph finite_state_machine {
+	rankdir=LR;
+	INIT_STATE [shape=circle label = "", style = filled, color = "black"];
+		INIT_STATE -> RunClient [label="init"];
+	RunClient [label="RunClient{i}", shape = ellipse];
+		RunClient -> Loop [label="lifecycle?client_launched"];
+	Loop [label="Loop", shape = ellipse];
+		Loop -> Loop [label="signal?clock_tick{a}"];
+}
