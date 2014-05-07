@@ -9,7 +9,7 @@
 #include "WebSocket.h"
 #include "../libs/Utility.h"
 
-using namespace WebSockets;
+namespace WebSockets {
 
 WebSocket::WebSocket(int _port) {
 	this->port = _port;
@@ -34,3 +34,4 @@ void WebSocket::Destroy(){
 	delete this;
 }
 
+}

@@ -13,7 +13,7 @@
 
 #include "Log.h"
 
-using namespace WebSockets;
+namespace WebSockets {
 using namespace std;
 
 Log* Log::s_instance = NULL;
@@ -87,4 +87,5 @@ void Log::Write(LogLevel _level, const char* _format, ...){
 			}
 			break;
 	}
+}
 }

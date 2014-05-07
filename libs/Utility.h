@@ -5,8 +5,8 @@
  *      Author: vassik
  */
 
-#ifndef UTILITY_H_
-#define UTILITY_H_
+#ifndef TINYWEBSOCKETSUTILITY_H_
+#define TINYWEBSOCKETSUTILITY_H_
 
 #include "libwebsockets/lws_config.h"
 #include "libwebsockets/libwebsockets.h"
@@ -81,4 +81,4 @@ extern "C" {
 	void dump_handshake_info(struct libwebsocket *wsi);
 }
 
-#endif /* UTILITY_H_ */
+#endif /* TINYWEBSOCKETSUTILITY_H_ */

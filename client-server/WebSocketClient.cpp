@@ -22,7 +22,7 @@
 
 #include "WebSocketFacade.h"
 
-using namespace WebSockets;
+namespace WebSockets {
 using namespace std;
 
 WebSocketClient::WebSocketClient(WebSocketFacade* facade, const char* host, int port, const char* subprotocol) : WebSocket(port) {
@@ -218,4 +218,5 @@ void* WebSocketClient::startServicing(void *ptr){
 	Log::Write(LogLevel_Debug, "WebSocketClient::startServicing() : client 0x%08x stops servicing\n", client);
 	libwebsocket_context_destroy(client->context);
 	return NULL;
+}
 }

@@ -17,55 +17,56 @@
 #include "../libs/Constants.h"
 #include "../libs/Utility.h"
 
-using namespace WebSockets;
+namespace WebSockets {
 
-class WebSocketFacade;
+	class WebSocketFacade;
 
-class WebSocketMirrorServer : WebSocket {
+	class WebSocketMirrorServer : WebSocket {
 
-	private:
-		WebSocketMirrorServer(WebSocketFacade* facade, int _port, const char* subprotocol);
-		virtual ~WebSocketMirrorServer();
+		private:
+			WebSocketMirrorServer(WebSocketFacade* facade, int _port, const char* subprotocol);
+			virtual ~WebSocketMirrorServer();
 
-	public:
-		int force_exit;
-		int ringbuffer_head;
-		const char* subprotocol;
+		public:
+			int force_exit;
+			int ringbuffer_head;
+			const char* subprotocol;
 
-	public:
-		static WebSocketMirrorServer* s_instance;
-		static const char* web_socket_subprotocol;
-		struct libwebsocket_context *context;
-		struct a_message ringbuffer[MAX_MESSAGE_QUEUE];
+		public:
+			static WebSocketMirrorServer* s_instance;
+			static const char* web_socket_subprotocol;
+			struct libwebsocket_context *context;
+			struct a_message ringbuffer[MAX_MESSAGE_QUEUE];
 
-		static WebSocketMirrorServer* Init(WebSocketFacade* facade, int _port, const char* subprotocol);
-		static WebSocketMirrorServer* Get();
-		static int callback_web_socket_server(struct libwebsocket_context *context,
-					struct libwebsocket *wsi,
-					enum libwebsocket_callback_reasons reason,
-							       void *user, void *in, size_t len);
-		static void Halt();
-		static void* startServicing(void *ptr);
+			static WebSocketMirrorServer* Init(WebSocketFacade* facade, int _port, const char* subprotocol);
+			static WebSocketMirrorServer* Get();
+			static int callback_web_socket_server(struct libwebsocket_context *context,
+						struct libwebsocket *wsi,
+						enum libwebsocket_callback_reasons reason,
+									   void *user, void *in, size_t len);
+			static void Halt();
+			static void* startServicing(void *ptr);
 
-	public:
-		virtual WebSocketMirrorServer* setCallbacks(ThingMLCallback* _onopen, ThingMLCallback* _onclose,
-				ThingMLCallback* _onmessage, ThingMLCallback* _onerror);
-		virtual int open();
-		virtual int close();
-		virtual int sendMessage(const char* message);
-		virtual void Destroy();
-		virtual int getPort();
+		public:
+			virtual WebSocketMirrorServer* setCallbacks(ThingMLCallback* _onopen, ThingMLCallback* _onclose,
+					ThingMLCallback* _onmessage, ThingMLCallback* _onerror);
+			virtual int open();
+			virtual int close();
+			virtual int sendMessage(const char* message);
+			virtual void Destroy();
+			virtual int getPort();
 
-	private:
-		void reset();
+		private:
+			void reset();
 
-	protected:
-		virtual void onOpen();
-		virtual void onClose();
-		virtual void onError(const char*error);
-		virtual void onMessage(const char* message);
-};
+		protected:
+			virtual void onOpen();
+			virtual void onClose();
+			virtual void onError(const char*error);
+			virtual void onMessage(const char* message);
+	};
 
+}
 
 
 #endif /* WEBSOCKETSERVER_H_ */

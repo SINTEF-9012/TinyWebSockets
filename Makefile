@@ -43,12 +43,12 @@ clean :
 cleanlibs :
 	rm -rf $(DYNAMIC_LIB_LOCATION) $(STATIC_LIB_LOCATION)
 
-unistall:
+uninstall:
 	rm -rf /usr/local/include/tinyws
 	rm -f /usr/local/lib/$(STATIC_LIB_LOCATION)
 	rm -f /usr/local/lib/$(DYNAMIC_LIB_LOCATION)
 
-install: staticlib dynamiclib unistall
+install: staticlib dynamiclib uninstall
 	install -d /usr/local
 	install -d /usr/local/lib
 	install -d /use/local/include

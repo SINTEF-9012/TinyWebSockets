@@ -10,7 +10,7 @@
 #include "Utility.h"
 #include "Log.h"
 
-using namespace WebSockets;
+namespace WebSockets {
 
 
 WebSocketObserver::WebSocketObserver(ThingMLCallback* _open_callback,
@@ -82,4 +82,5 @@ WebSocketObserver::~WebSocketObserver(){
 	if(this->close_callback != NULL){
 		delete this->close_callback;
 	}
+}
 }

@@ -21,7 +21,7 @@
 #include "../libs/Constants.h"
 #include "../libs/Utility.h"
 
-using namespace WebSockets;
+namespace WebSockets {
 
 
 WebSocketMirrorServer* WebSocketMirrorServer::s_instance = NULL;
@@ -283,4 +283,5 @@ done:
 	}
 
 	return 0;
+}
 }

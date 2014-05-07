@@ -15,7 +15,7 @@
 
 #include <syslog.h>
 
-using namespace WebSockets;
+namespace WebSockets {
 using namespace std;
 
 WebSocketFacade* WebSocketFacade::s_instance = NULL;
@@ -98,6 +98,6 @@ void WebSocketFacade::addWebSocketClient(WebSocketClient* client){
 void WebSocketFacade::setWebSocketMirrorServer(WebSocketMirrorServer* server){
 	mirrorServer = server;
 }
-
+}
 
 
