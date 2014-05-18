@@ -1,0 +1,29 @@
+LIB_SRCS = ./sockets/WebSocket.cpp ./libs/Log.cpp ./libs/Utility.cpp ./client-server/WebSocketMirrorServer.cpp ./client-server/WebSocketFacade.cpp ./client-server/WebSocketClient.cpp
+LIB_OBJS = ./sockets/WebSocket.o ./libs/Log.o ./libs/Utility.o ./client-server/WebSocketMirrorServer.o ./client-server/WebSocketFacade.o ./client-server/WebSocketClient.o
+
+STATIC_LIB_LOCATION = libtinyws.a
+DYNAMIC_LIB_LOCATION = libtinyws.so
+
+GNUTLS := #-lgnutls
+LIBS = $(GNUTLS) -lpthread -lwebsockets
+CFLAGS = -DDEBUG -Wall
+
+CROSS_COMPILE := /home/vassik/OpenZWave/gcc-linaro-arm-linux/bin/arm-linux-gnueabi-
+
+GPP = $(CROSS_COMPILE)g++
+AR = $(CROSS_COMPILE)ar
+LD = $(CROSS_COMPILE)ld
+
+%.o : %.cpp
+	$(GPP) $(CFLAGS) -fPIC -c -o $@ $<
+
+all : staticlib dynamiclib
+	
+staticlib : $(LIB_OBJS)
+	$(AR) rvs $(STATIC_LIB_LOCATION) $(LIB_OBJS)
+
+dynamiclib : $(LIB_OBJS)
+	$(GPP) -shared -o $(DYNAMIC_LIB_LOCATION) $(LIB_OBJS)
+	
+clean :
+	rm -rf $(LIB_OBJS) $(STATIC_LIB_LOCATION) $(DYNAMIC_LIB_LOCATION)
